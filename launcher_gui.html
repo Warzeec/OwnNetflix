@@ -207,12 +207,29 @@ body::after {
 .show-header__layout {
   display: flex; gap: 28px; align-items: flex-start; margin-top: 16px;
 }
-.show-header__poster {
-  width: 180px; min-width: 180px; border-radius: var(--radius);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  display: none;
+.show-header__poster-wrap {
+  position: relative; width: 180px; min-width: 180px;
+  cursor: pointer; display: none;
 }
-.show-header__poster.visible { display: block; }
+.show-header__poster-wrap.visible { display: block; }
+.show-header__poster {
+  width: 100%; border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  transition: filter var(--transition), transform var(--transition);
+}
+.show-header__poster-wrap:hover .show-header__poster {
+  filter: brightness(0.5); transform: scale(1.03);
+}
+.show-header__poster-play {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--transition);
+}
+.show-header__poster-wrap:hover .show-header__poster-play { opacity: 1; }
+.show-header__poster-play svg {
+  width: 56px; height: 56px; fill: white;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
 
 /* Season tabs */
 .season-tabs {
@@ -655,7 +672,12 @@ body::after {
       </div>
     </div>
     <div class="show-header__layout" id="showHeaderLayout">
-      <img class="show-header__poster" id="showPoster" alt="Poster">
+      <div class="show-header__poster-wrap" id="showPosterWrap">
+        <img class="show-header__poster" id="showPoster" alt="Poster">
+        <div class="show-header__poster-play">
+          <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+        </div>
+      </div>
       <p class="show-header__overview" id="showOverview"></p>
     </div>
   </header>
@@ -949,12 +971,14 @@ async function showDetail(slug, seasonNum) {
   // Show poster + full overview for movies
   const posterEl = document.getElementById('showPoster');
   const isMovie = currentShow.type === 'movie';
+  const posterWrap = document.getElementById('showPosterWrap');
   if (currentShow.poster_path) {
     posterEl.src = `${API_BASE}/api/poster/${slug}`;
-    posterEl.classList.add('visible');
+    posterWrap.classList.add('visible');
   } else {
-    posterEl.classList.remove('visible');
+    posterWrap.classList.remove('visible');
   }
+  posterWrap.onclick = () => { if (!pollTimer) playBtn.click(); };
 
   buildSeasonTabs();
   await loadSeasonEpisodes(slug, seasonNum);
@@ -1263,12 +1287,16 @@ function startPolling() {
       }
 
       if (!st.playing) {
-        stopPolling();
-        if (st.show_slug === currentSlug || !st.show_slug) {
-          selectedStart = getNextUnwatched();
-          startInput.value = selectedStart;
-          renderGrid();
+        // Capture completed episodes before they're lost
+        if (st.completed && st.completed.length > 0) {
+          st.completed.forEach(ep => watched.add(ep));
+          saveWatched();
         }
+        stopPolling();
+        selectedStart = getNextUnwatched();
+        startInput.value = selectedStart;
+        renderGrid();
+        updateProgress();
         showToast('Lecture terminee !', 'success');
       }
     } catch {

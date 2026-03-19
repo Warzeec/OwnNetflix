@@ -79,8 +79,7 @@ for file in files:
         vlc_path,
         full_path,
         "--fullscreen",
-        "--sub-language=fr",
-        "--audio-language=fr",
+        "--sub-language=fre",
         "--play-and-exit"
     ])
 

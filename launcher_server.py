@@ -96,6 +96,37 @@ def get_episode_code(filename):
 
 
 # ---------------------------------------------------------------------------
+# Subtitle track detection via ffprobe
+# ---------------------------------------------------------------------------
+
+def find_sub_track(filepath, lang_codes=("fre", "fra", "fr")):
+    """Find the first non-forced subtitle track matching the given language.
+
+    Returns the VLC sub-track index (0-based among subtitle tracks) or None.
+    """
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_streams", "-select_streams", "s", filepath],
+            capture_output=True, text=True, timeout=10,
+        )
+        streams = json.loads(result.stdout).get("streams", [])
+    except Exception as exc:
+        print(f"  ffprobe error: {exc}")
+        return None
+
+    sub_index = 0
+    for s in streams:
+        lang = s.get("tags", {}).get("language", "")
+        forced = s.get("disposition", {}).get("forced", 0)
+        if lang in lang_codes and not forced:
+            return sub_index
+        sub_index += 1
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Library scanning
 # ---------------------------------------------------------------------------
 
@@ -298,6 +329,7 @@ def fetch_tmdb_show_info(show_name):
         "overview": hit.get("overview", ""),
         "vote_average": hit.get("vote_average", 0),
         "first_air_date": hit.get("first_air_date", ""),
+        "original_language": hit.get("original_language", ""),
     }
 
     cache[cache_key] = info
@@ -327,6 +359,7 @@ def fetch_tmdb_movie_info(movie_name):
         "overview": hit.get("overview", ""),
         "vote_average": hit.get("vote_average", 0),
         "release_date": hit.get("release_date", ""),
+        "original_language": hit.get("original_language", ""),
     }
 
     cache[cache_key] = info
@@ -442,29 +475,46 @@ current_process = None
 # Bring VLC to foreground (Windows)
 # ---------------------------------------------------------------------------
 
-def bring_to_front(pid, delay=2):
-    """Bring the VLC window to the foreground after a short delay."""
+def bring_to_front(pid, delay=2, retries=5):
+    """Bring the VLC window to the foreground after a short delay, with retries."""
     time.sleep(delay)
-    try:
-        user32 = ctypes.windll.user32
-        # Windows trick: simulate ALT press to allow SetForegroundWindow
-        user32.keybd_event(0x12, 0, 0, 0)  # ALT down
-        user32.keybd_event(0x12, 0, 2, 0)  # ALT up
+    user32 = ctypes.windll.user32
 
-        WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wt.HWND, wt.LPARAM)
+    for attempt in range(retries):
+        try:
+            # Attach to foreground thread to gain permission
+            fore_hwnd = user32.GetForegroundWindow()
+            fore_tid = user32.GetWindowThreadProcessId(fore_hwnd, None)
+            cur_tid = ctypes.windll.kernel32.GetCurrentThreadId()
+            user32.AttachThreadInput(cur_tid, fore_tid, True)
 
-        def callback(hwnd, _):
-            proc_pid = ctypes.c_ulong()
-            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(proc_pid))
-            if proc_pid.value == pid and user32.IsWindowVisible(hwnd):
-                user32.ShowWindow(hwnd, 5)  # SW_SHOW
-                user32.SetForegroundWindow(hwnd)
-                return False
-            return True
+            # ALT trick to allow SetForegroundWindow
+            user32.keybd_event(0x12, 0, 0, 0)  # ALT down
+            user32.keybd_event(0x12, 0, 2, 0)  # ALT up
 
-        user32.EnumWindows(WNDENUMPROC(callback), 0)
-    except Exception:
-        pass
+            found = False
+            WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wt.HWND, wt.LPARAM)
+
+            def callback(hwnd, _):
+                nonlocal found
+                proc_pid = ctypes.c_ulong()
+                user32.GetWindowThreadProcessId(hwnd, ctypes.byref(proc_pid))
+                if proc_pid.value == pid and user32.IsWindowVisible(hwnd):
+                    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                    user32.BringWindowToTop(hwnd)
+                    user32.SetForegroundWindow(hwnd)
+                    found = True
+                    return False
+                return True
+
+            user32.EnumWindows(WNDENUMPROC(callback), 0)
+            user32.AttachThreadInput(cur_tid, fore_tid, False)
+
+            if found:
+                break
+        except Exception:
+            pass
+        time.sleep(1)
 
 
 # ---------------------------------------------------------------------------
@@ -488,40 +538,63 @@ def play_worker(slug, season_num, start, count, shutdown):
 
     folder = season["folder"]
     all_files = season["files"]
+    is_movie = show["type"] == "movie"
 
-    # Filter files starting from the requested episode number
-    files = [f for f in all_files if get_episode_number(f) >= start]
-    files = files[:count]
+    # Filter files
+    if is_movie:
+        files = all_files[start - 1: start - 1 + count]
+    else:
+        files = [f for f in all_files if get_episode_number(f) >= start]
+        files = files[:count]
 
     if not files:
-        print(f"  No files to play for {slug} S{season_num:02d} from episode {start}")
+        print(f"  No files to play for {slug} from episode {start}")
         return
+
+    # Determine original language from TMDB
+    if is_movie:
+        tmdb_info = fetch_tmdb_movie_info(show["name"])
+    else:
+        tmdb_info = fetch_tmdb_show_info(show["name"])
+    original_lang = (tmdb_info or {}).get("original_language", "")
+
+    # Map ISO 639-1 (TMDB) to ISO 639-2 (VLC)
+    lang_map = {"en": "eng", "fr": "fre", "es": "spa", "de": "ger", "it": "ita",
+                "pt": "por", "ja": "jpn", "ko": "kor", "zh": "chi", "ar": "ara",
+                "ru": "rus", "nl": "dut", "sv": "swe", "da": "dan", "no": "nor"}
+    audio_lang = lang_map.get(original_lang, original_lang)
 
     with state_lock:
         state["playing"] = True
         state["show_slug"] = slug
         state["season"] = season_num
-        state["queue"] = [get_episode_number(f) for f in files]
+        state["queue"] = list(range(start, start + len(files))) if is_movie else [get_episode_number(f) for f in files]
         state["completed"] = []
         state["shutdown_after"] = shutdown
 
-    for file in files:
-        ep_num = get_episode_number(file)
+    for idx, file in enumerate(files):
+        ep_num = (start + idx) if is_movie else get_episode_number(file)
         full_path = os.path.join(folder, file)
 
         with state_lock:
             state["current_episode"] = ep_num
             state["current_file"] = file
 
-        print(f"  > Playing {slug} S{season_num:02d}E{ep_num:02d}: {file}")
+        label = f"{show['name']}" if is_movie else f"{slug} S{season_num:02d}E{ep_num:02d}"
+        print(f"  > Playing {label}: {file} (audio={audio_lang})")
 
-        current_process = subprocess.Popen([
-            VLC_PATH, full_path,
-            "--fullscreen",
-            "--sub-language=fr",
-            "--audio-language=fr",
-            "--play-and-exit",
-        ])
+        vlc_args = [VLC_PATH, full_path, "--fullscreen", "--play-and-exit"]
+        if audio_lang:
+            vlc_args.append(f"--audio-language={audio_lang}")
+        if original_lang != "fr":
+            sub_track = find_sub_track(full_path)
+            if sub_track is not None:
+                vlc_args.append(f"--sub-track={sub_track}")
+                print(f"    Subtitle track: {sub_track} (non-forced FR)")
+            else:
+                vlc_args.append("--sub-language=fre,fra,fr")
+
+        current_process = subprocess.Popen(vlc_args)
 
         # Bring VLC to front in a separate thread
         threading.Thread(
@@ -544,10 +617,9 @@ def play_worker(slug, season_num, start, count, shutdown):
 
     with state_lock:
         state["playing"] = False
-        state["show_slug"] = None
-        state["season"] = None
         state["current_episode"] = None
         state["current_file"] = None
+        # Keep show_slug, season, and completed so the GUI can read them
 
     print("  Session complete")
 
@@ -795,20 +867,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def _handle_status(self):
         with state_lock:
-            # Verify VLC is still running
-            if state["playing"] and current_process is not None:
-                if current_process.poll() is not None:
-                    state["playing"] = False
-                    state["show_slug"] = None
-                    state["season"] = None
-                    state["current_episode"] = None
-                    state["current_file"] = None
-            elif state["playing"] and current_process is None:
-                state["playing"] = False
-                state["show_slug"] = None
-                state["season"] = None
-                state["current_episode"] = None
-                state["current_file"] = None
             self._json(dict(state))
 
     def _handle_play(self, body):
