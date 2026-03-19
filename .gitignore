@@ -1,0 +1,10 @@
+.env
+progress.txt
+tmdb_cache.json
+thumbs/
+*.mkv
+*.mp4
+*.avi
+__pycache__/
+backup/
+*.txt
