@@ -132,8 +132,37 @@ def scan_library(force=False):
 
     library = {}
 
+    # Detect loose video files in MEDIA_ROOT (movies not in a subfolder)
+    loose_videos = sorted(
+        [f for f in os.listdir(MEDIA_ROOT)
+         if f.lower().endswith(VIDEO_EXT) and os.path.isfile(os.path.join(MEDIA_ROOT, f))],
+    )
+    for vfile in loose_videos:
+        raw_name = re.split(
+            r"[\.\s](?:\d{4}|720p|1080p|2160p|4K|BluRay|BRRip|WEBRip|WEB-DL|HDRip|x264|x265|HEVC|AAC|DTS|REMUX|COMPLETE)",
+            os.path.splitext(vfile)[0],
+            maxsplit=1,
+            flags=re.IGNORECASE,
+        )[0].replace(".", " ").strip()
+        # Strip common torrent site tags like [ OxTorrent.com ]
+        raw_name = re.sub(r"\[.*?\]", "", raw_name).strip()
+        slug = slugify(raw_name)
+
+        if slug not in library:
+            library[slug] = {
+                "name": raw_name,
+                "type": "movie",
+                "slug": slug,
+                "seasons": {},
+            }
+        library[slug]["seasons"][0] = {
+            "num": 0,
+            "folder": MEDIA_ROOT,
+            "files": [vfile],
+        }
+
     for entry in os.listdir(MEDIA_ROOT):
-        if entry in SKIP_DIRS:
+        if entry in SKIP_DIRS or entry.startswith("."):
             continue
         folder_path = os.path.join(MEDIA_ROOT, entry)
         if not os.path.isdir(folder_path):
@@ -233,7 +262,8 @@ def tmdb_request(path):
     """Make a GET request to the TMDB v3 API. Returns parsed JSON or None."""
     if not TMDB_TOKEN:
         return None
-    url = f"https://api.themoviedb.org/3{path}"
+    sep = "&" if "?" in path else "?"
+    url = f"https://api.themoviedb.org/3{path}{sep}language=fr-FR"
     headers = {
         "Authorization": f"Bearer {TMDB_TOKEN}",
         "Accept": "application/json",
@@ -660,10 +690,15 @@ class Handler(BaseHTTPRequestHandler):
                 titles = fetch_tmdb_season_titles(tmdb_info["tmdb_id"], season_num)
 
         episodes = []
-        for f in season["files"]:
-            num = get_episode_number(f)
-            code = get_episode_code(f) or f"S{season_num:02d}E{num:02d}"
-            title = titles.get(str(num), "")
+        for idx, f in enumerate(season["files"], start=1):
+            if show["type"] == "movie":
+                num = idx
+                code = f"Film {idx}" if len(season["files"]) > 1 else "Film"
+                title = ""
+            else:
+                num = get_episode_number(f)
+                code = get_episode_code(f) or f"S{season_num:02d}E{num:02d}"
+                title = titles.get(str(num), "")
             episodes.append({
                 "num": num,
                 "code": code,
