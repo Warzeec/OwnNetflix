@@ -3,7 +3,7 @@ import re
 import subprocess
 import time
 
-folder = r"C:\Users\openhub\Downloads\Abbott.Elementary.S01.COMPLETE.720p.DSNP.WEBRip.x264-GalaxyTV[TGx]"
+folder = r"C:\Users\openhub\Downloads\OwnNetflix\Abbott.Elementary.S01.COMPLETE.720p.DSNP.WEBRip.x264-GalaxyTV[TGx]"
 vlc_path = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
 
 video_ext = (".mp4", ".mkv", ".avi")

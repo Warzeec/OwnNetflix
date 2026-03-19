@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abbott Elementary — Saison 1</title>
+<title>OwnNetflix</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -40,27 +40,18 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
-  padding-bottom: 120px;
 }
 
-/* Vignette */
 body::before {
   content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 100;
   background: radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(4,4,10,0.55) 100%);
 }
-
-/* Dot texture */
 body::after {
   content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 101;
-  opacity: 0.3;
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 101; opacity: 0.3;
   background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
   background-size: 20px 20px;
 }
@@ -70,64 +61,184 @@ body::after {
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-sec); }
 
-/* ── HEADER ───────────────────── */
-.header {
-  position: relative;
-  padding: 48px 40px 28px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
+/* ══════════════ LIBRARY VIEW ══════════════ */
 
-.header__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: rgba(212,149,58,0.1);
-  border: 1px solid rgba(212,149,58,0.2);
-  padding: 5px 14px;
-  border-radius: 100px;
-  font-size: 0.73rem;
-  font-weight: 500;
-  color: var(--gold-light);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 18px;
-  animation: fadeDown 0.6s ease both;
+.lib-header {
+  max-width: 1200px; margin: 0 auto;
+  padding: 48px 40px 8px;
 }
-
-.header__title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
+.lib-header__row {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+}
+.lib-header__brand {
+  font-family: 'Syne', sans-serif; font-weight: 800;
   font-size: clamp(2.4rem, 5vw, 3.6rem);
-  line-height: 1.05;
   letter-spacing: -0.03em;
   background: linear-gradient(135deg, var(--text) 30%, var(--gold-light) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: fadeDown 0.6s ease both;
+}
+.lib-header__sub {
+  margin-top: 6px; color: var(--text-sec); font-size: 0.95rem;
   animation: fadeDown 0.6s 0.08s ease both;
 }
 
-.header__sub {
-  margin-top: 10px;
-  color: var(--text-sec);
-  font-size: 0.95rem;
-  font-weight: 400;
-  animation: fadeDown 0.6s 0.16s ease both;
+/* Server badge */
+.server-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
+  padding: 4px 12px; border-radius: 100px;
+  border: 1px solid var(--border-subtle);
+  animation: fadeDown 0.6s 0.1s ease both;
+}
+.server-badge__dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.server-badge.connected { color: #4ade80; border-color: rgba(74,222,128,0.2); }
+.server-badge.connected .server-badge__dot { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.4); }
+
+/* Library grid */
+.lib-grid-wrapper {
+  max-width: 1200px; margin: 0 auto; padding: 24px 40px 60px;
+}
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
 }
 
-.header__sub span { color: var(--gold); font-weight: 600; }
+/* Show card */
+.show-card {
+  position: relative; aspect-ratio: 2/3;
+  border-radius: var(--radius); overflow: hidden;
+  cursor: pointer; background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  opacity: 0; animation: cardIn 0.5s ease both;
+}
+.show-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: var(--border-hover);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 30px var(--gold-glow);
+}
+.show-card__poster {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition), filter var(--transition);
+}
+.show-card:hover .show-card__poster { transform: scale(1.05); filter: brightness(1.1); }
+.show-card__no-poster {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem;
+  color: var(--text-muted); text-align: center; padding: 20px;
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+}
+.show-card__overlay {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 45%, transparent 100%);
+  padding: 16px;
+}
+.show-card__type {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--gold-dim); font-weight: 600;
+}
+.show-card__name {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 0.95rem; margin-top: 4px; color: white; line-height: 1.2;
+}
+.show-card__progress {
+  margin-top: 10px; height: 3px;
+  background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;
+}
+.show-card__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal-dim), var(--teal));
+  border-radius: 3px; transition: width 0.5s;
+}
 
-/* Season progress bar */
+.lib-empty {
+  text-align: center; padding: 80px 20px; color: var(--text-muted); font-size: 1.1rem;
+}
+
+/* ══════════════ SHOW DETAIL VIEW ══════════════ */
+
+#showView { padding-bottom: 120px; }
+
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--text-sec);
+  font-family: 'Outfit', sans-serif; font-size: 0.85rem;
+  cursor: pointer; padding: 8px 0; margin-bottom: 4px;
+  transition: color var(--transition);
+}
+.back-btn:hover { color: var(--text); }
+.back-btn svg { transition: transform var(--transition); }
+.back-btn:hover svg { transform: translateX(-3px); }
+
+.show-header {
+  max-width: 1100px; margin: 0 auto;
+  padding: 24px 40px 0;
+  animation: fadeDown 0.5s ease both;
+}
+.show-header__title {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1;
+  background: linear-gradient(135deg, var(--text) 30%, var(--gold-light) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.show-header__meta {
+  display: flex; align-items: center; gap: 14px; margin-top: 8px; flex-wrap: wrap;
+}
+.show-header__info {
+  font-size: 0.88rem; color: var(--text-sec);
+}
+.show-header__info span { color: var(--gold); font-weight: 600; }
+.show-header__overview {
+  margin-top: 10px; color: var(--text-sec);
+  font-size: 0.85rem; line-height: 1.5; max-width: 700px;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Season tabs */
+.season-tabs {
+  display: none; gap: 8px;
+  max-width: 1100px; margin: 20px auto 0; padding: 0 40px;
+  overflow-x: auto;
+  animation: fadeDown 0.5s 0.1s ease both;
+}
+.season-tabs::-webkit-scrollbar { height: 0; }
+.season-tabs.visible { display: flex; }
+.season-tab {
+  padding: 8px 18px; border-radius: 100px;
+  border: 1px solid var(--border-subtle); background: transparent;
+  color: var(--text-sec); font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  transition: all var(--transition);
+}
+.season-tab:hover {
+  background: var(--bg-card-hover); border-color: var(--border-hover); color: var(--text);
+}
+.season-tab.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  border-color: var(--gold); color: var(--bg-deep); font-weight: 600;
+}
+
+/* Season bar */
+.season-bar-wrap {
+  max-width: 1100px; margin: 18px auto 0; padding: 0 40px;
+  animation: fadeDown 0.5s 0.15s ease both;
+}
 .season-bar {
-  margin-top: 22px;
-  height: 4px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 4px;
-  overflow: hidden;
-  animation: fadeDown 0.6s 0.24s ease both;
+  height: 4px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden;
 }
-
 .season-bar__fill {
   height: 100%;
   background: linear-gradient(90deg, var(--teal-dim), var(--teal));
@@ -135,54 +246,34 @@ body::after {
   transition: width 0.8s cubic-bezier(.4,0,.2,1);
   position: relative;
 }
-
 .season-bar__fill::after {
   content: '';
-  position: absolute;
-  right: 0;
-  top: -2px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--teal);
-  box-shadow: 0 0 12px var(--teal-glow);
+  position: absolute; right: 0; top: -2px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teal); box-shadow: 0 0 12px var(--teal-glow);
 }
 
-/* ── EPISODE GRID ─────────────── */
+/* ══════════════ EPISODE GRID ══════════════ */
+
 .grid-wrapper {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 12px 40px 0;
+  max-width: 1100px; margin: 0 auto; padding: 12px 40px 0;
   position: relative;
 }
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  position: relative;
+  gap: 16px; position: relative;
 }
-
-/* Cursor spotlight */
 .grid__spotlight {
-  position: absolute;
-  width: 350px;
-  height: 350px;
-  border-radius: 50%;
+  position: absolute; width: 350px; height: 350px; border-radius: 50%;
   background: radial-gradient(circle, var(--gold-glow), transparent 70%);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s;
-  transform: translate(-50%, -50%);
-  z-index: 0;
+  pointer-events: none; opacity: 0; transition: opacity 0.4s;
+  transform: translate(-50%, -50%); z-index: 0;
 }
-
 .grid:hover .grid__spotlight { opacity: 1; }
 
-/* ── EPISODE CARD ─────────────── */
 .card {
-  position: relative;
-  z-index: 1;
+  position: relative; z-index: 1;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
@@ -190,23 +281,16 @@ body::after {
   cursor: pointer;
   transition: transform var(--transition), border-color var(--transition),
               box-shadow var(--transition), background var(--transition);
-  opacity: 0;
-  animation: cardIn 0.5s ease both;
+  opacity: 0; animation: cardIn 0.5s ease both;
   overflow: hidden;
 }
-
 .card::before {
   content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
   border-radius: var(--radius) var(--radius) 0 0;
   background: transparent;
   transition: background var(--transition);
 }
-
 .card:hover {
   transform: translateY(-4px);
   border-color: var(--border-hover);
@@ -214,15 +298,10 @@ body::after {
   box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 30px var(--gold-glow);
 }
 
-/* Card thumbnail */
 .card__thumb {
-  width: 100%;
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-  object-fit: cover;
-  margin-bottom: 12px;
-  background: rgba(255,255,255,0.03);
-  display: block;
+  width: 100%; aspect-ratio: 16/9; border-radius: 8px;
+  object-fit: cover; margin-bottom: 12px;
+  background: rgba(255,255,255,0.03); display: block;
   transition: opacity var(--transition), filter var(--transition);
 }
 .card:hover .card__thumb { opacity: 0.85; }
@@ -230,47 +309,26 @@ body::after {
 .card.now-playing .card__thumb { filter: brightness(0.7) saturate(1.2); }
 
 .card__num {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 2.2rem;
-  line-height: 1;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 2.2rem; line-height: 1;
   color: var(--text-muted);
-  transition: color var(--transition);
-  margin-bottom: 6px;
+  transition: color var(--transition); margin-bottom: 6px;
 }
-
 .card__code {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
   transition: color var(--transition);
 }
-
 .card__title {
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text-sec);
-  line-height: 1.3;
-  transition: color var(--transition);
+  font-size: 0.88rem; font-weight: 500; color: var(--text-sec);
+  line-height: 1.3; transition: color var(--transition);
 }
-
 .card__status {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  transition: all var(--transition);
-  border: 2px solid transparent;
-  z-index: 2;
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; transition: all var(--transition);
+  border: 2px solid transparent; z-index: 2;
 }
 
 /* Card states */
@@ -279,9 +337,7 @@ body::after {
 .card.watched .card__code { color: var(--teal-dim); }
 .card.watched .card__title { color: var(--text); }
 .card.watched .card__status {
-  background: rgba(79,179,194,0.15);
-  border-color: var(--teal);
-  color: var(--teal);
+  background: rgba(79,179,194,0.15); border-color: var(--teal); color: var(--teal);
 }
 
 .card.selected {
@@ -294,9 +350,7 @@ body::after {
 .card.selected .card__code { color: var(--gold-dim); }
 .card.selected .card__title { color: var(--text); }
 .card.selected .card__status {
-  background: rgba(212,149,58,0.15);
-  border-color: var(--gold);
-  color: var(--gold);
+  background: rgba(212,149,58,0.15); border-color: var(--gold); color: var(--gold);
 }
 
 .card.in-range {
@@ -309,7 +363,6 @@ body::after {
 .card.in-range .card__code { color: var(--gold-dim); }
 .card.in-range .card__title { color: var(--text-sec); }
 
-/* Now playing */
 .card.now-playing {
   border-color: var(--gold);
   background: rgba(212,149,58,0.08);
@@ -318,9 +371,7 @@ body::after {
 .card.now-playing::before { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
 .card.now-playing .card__num { color: var(--gold-light); }
 .card.now-playing .card__status {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--bg-deep);
+  background: var(--gold); border-color: var(--gold); color: var(--bg-deep);
 }
 
 @keyframes nowPlayingPulse {
@@ -328,46 +379,115 @@ body::after {
   50% { box-shadow: 0 0 40px rgba(212,149,58,0.3), inset 0 0 30px rgba(212,149,58,0.06); }
 }
 
-/* Server badge */
-.server-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 14px;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  padding: 4px 12px;
-  border-radius: 100px;
+.card__watch-btn {
+  position: absolute; bottom: 12px; right: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
   border: 1px solid var(--border-subtle);
-  vertical-align: middle;
-  animation: fadeDown 0.6s 0.1s ease both;
+  background: rgba(255,255,255,0.04); color: var(--text-muted);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition); opacity: 0; z-index: 2;
 }
-.server-badge__dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  transition: background 0.3s, box-shadow 0.3s;
+.card:hover .card__watch-btn { opacity: 1; }
+.card__watch-btn:hover {
+  border-color: var(--teal); color: var(--teal);
+  background: rgba(79,179,194,0.1); transform: scale(1.15);
 }
-.server-badge.connected { color: #4ade80; border-color: rgba(74,222,128,0.2); }
-.server-badge.connected .server-badge__dot { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.4); }
+.card.watched .card__watch-btn { opacity: 0.6; border-color: var(--teal-dim); color: var(--teal); }
+.card.watched:hover .card__watch-btn { opacity: 1; }
+.card.watched .card__watch-btn:hover {
+  border-color: var(--red); color: var(--red); background: rgba(201,74,74,0.1);
+}
+.play-btn.disabled { opacity: 0.4; pointer-events: none; animation: none; }
 
-/* Now playing bar (top) */
+/* ══════════════ CONTROL BAR ══════════════ */
+
+.controls {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(10,10,22,0.82);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-top: 1px solid var(--border-subtle);
+  padding: 16px 40px;
+  animation: slideUp 0.6s 0.5s ease both;
+}
+.controls__inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; gap: 28px;
+  flex-wrap: wrap; justify-content: center;
+}
+.ctrl-group { display: flex; align-items: center; gap: 10px; }
+.ctrl-group label {
+  font-size: 0.78rem; font-weight: 500; color: var(--text-sec);
+  letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
+}
+.ctrl-input {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-subtle); border-radius: 8px;
+  color: var(--text); font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 1.1rem;
+  width: 56px; text-align: center; padding: 6px 4px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+.ctrl-input:focus { border-color: var(--gold); box-shadow: 0 0 12px var(--gold-glow); }
+
+.toggle { position: relative; display: inline-block; width: 42px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle__track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.08); border-radius: 24px;
+  border: 1px solid var(--border-subtle); cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.toggle__track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text-sec);
+  transition: transform var(--transition), background var(--transition);
+}
+.toggle input:checked + .toggle__track { background: rgba(201,74,74,0.2); border-color: var(--red); }
+.toggle input:checked + .toggle__track::after { transform: translateX(18px); background: var(--red); }
+
+.play-btn {
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  padding-left: 3px;
+  box-shadow: 0 0 30px var(--gold-glow), 0 4px 20px rgba(0,0,0,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: breathe 3.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.play-btn svg { width: 22px; height: 22px; fill: var(--bg-deep); }
+.play-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 50px var(--gold-glow), 0 6px 28px rgba(0,0,0,0.4);
+  animation: none;
+}
+.play-btn:active { transform: scale(0.94); }
+
+.reset-btn {
+  background: none; border: 1px solid var(--border-subtle);
+  color: var(--text-muted); font-size: 0.72rem; font-weight: 500;
+  font-family: 'Outfit', sans-serif; padding: 6px 14px;
+  border-radius: 8px; cursor: pointer;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  transition: all var(--transition);
+}
+.reset-btn:hover {
+  border-color: var(--red); color: var(--red); background: rgba(201,74,74,0.06);
+}
+
+/* NP bar & info */
 .np-bar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  z-index: 300;
-  background: transparent;
-  overflow: hidden;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 300; background: transparent; overflow: hidden;
 }
 .np-bar.active { background: rgba(212,149,58,0.12); }
 .np-bar__fill {
   height: 100%;
   background: linear-gradient(90deg, var(--gold-dim), var(--gold));
-  width: 30%;
-  animation: npSweep 2.5s ease-in-out infinite;
-  opacity: 0;
+  width: 30%; animation: npSweep 2.5s ease-in-out infinite; opacity: 0;
 }
 .np-bar.active .np-bar__fill { opacity: 1; }
 @keyframes npSweep {
@@ -376,388 +496,109 @@ body::after {
   100% { width: 0%; margin-left: 100%; }
 }
 
-/* Now playing info in controls */
-.np-info {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.82rem;
-  color: var(--gold-light);
-}
+.np-info { display: none; align-items: center; gap: 10px; font-size: 0.82rem; color: var(--gold-light); }
 .np-info.active { display: flex; }
 .np-info__dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--gold);
-  animation: breathe 1.5s ease-in-out infinite;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold); animation: breathe 1.5s ease-in-out infinite;
   flex-shrink: 0;
 }
 
-/* Watch toggle button on card */
-.card__watch-btn {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--border-subtle);
-  background: rgba(255,255,255,0.04);
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition);
-  opacity: 0;
-  z-index: 2;
-}
-.card:hover .card__watch-btn { opacity: 1; }
-.card__watch-btn:hover {
-  border-color: var(--teal);
-  color: var(--teal);
-  background: rgba(79,179,194,0.1);
-  transform: scale(1.15);
-}
-.card.watched .card__watch-btn {
-  opacity: 0.6;
-  border-color: var(--teal-dim);
-  color: var(--teal);
-}
-.card.watched:hover .card__watch-btn { opacity: 1; }
-.card.watched .card__watch-btn:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: rgba(201,74,74,0.1);
-}
+/* ══════════════ TOAST ══════════════ */
 
-/* Play button disabled during playback */
-.play-btn.disabled {
-  opacity: 0.4;
-  pointer-events: none;
-  animation: none;
-}
-
-/* ── CONTROL BAR ──────────────── */
-.controls {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 200;
-  background: rgba(10,10,22,0.82);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border-top: 1px solid var(--border-subtle);
-  padding: 16px 40px;
-  animation: slideUp 0.6s 0.5s ease both;
-}
-
-.controls__inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.ctrl-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ctrl-group label {
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-sec);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.ctrl-input {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text);
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  width: 56px;
-  text-align: center;
-  padding: 6px 4px;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  outline: none;
-}
-
-.ctrl-input:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 12px var(--gold-glow);
-}
-
-/* Toggle switch */
-.toggle {
-  position: relative;
-  display: inline-block;
-  width: 42px;
-  height: 24px;
-}
-
-.toggle input { opacity: 0; width: 0; height: 0; }
-
-.toggle__track {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.08);
-  border-radius: 24px;
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: background var(--transition), border-color var(--transition);
-}
-
-.toggle__track::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--text-sec);
-  transition: transform var(--transition), background var(--transition);
-}
-
-.toggle input:checked + .toggle__track {
-  background: rgba(201,74,74,0.2);
-  border-color: var(--red);
-}
-
-.toggle input:checked + .toggle__track::after {
-  transform: translateX(18px);
-  background: var(--red);
-}
-
-/* Play button */
-.play-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 3px;
-  box-shadow: 0 0 30px var(--gold-glow), 0 4px 20px rgba(0,0,0,0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: breathe 3.5s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-.play-btn svg { width: 22px; height: 22px; fill: var(--bg-deep); }
-
-.play-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 50px var(--gold-glow), 0 6px 28px rgba(0,0,0,0.4);
-  animation: none;
-}
-
-.play-btn:active { transform: scale(0.94); }
-
-/* Reset button */
-.reset-btn {
-  background: none;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
-  font-family: 'Outfit', sans-serif;
-  padding: 6px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transition: all var(--transition);
-}
-
-.reset-btn:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: rgba(201,74,74,0.06);
-}
-
-/* ── TOAST ─────────────────────── */
 .toast {
-  position: fixed;
-  top: 28px;
-  right: 28px;
-  z-index: 500;
-  background: rgba(16,16,30,0.92);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 14px 22px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  position: fixed; top: 28px; right: 28px; z-index: 500;
+  background: rgba(16,16,30,0.92); backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle); border-radius: 12px;
+  padding: 14px 22px; font-size: 0.88rem; font-weight: 500;
+  color: var(--text); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   transform: translateX(120%);
   transition: transform 0.45s cubic-bezier(.4,0,.2,1);
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
 }
-
 .toast.visible { transform: translateX(0); }
-.toast__icon { font-size: 1.2rem; }
 
-/* ── MODAL ─────────────────────── */
+/* ══════════════ MODAL ══════════════ */
+
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  background: rgba(4,4,10,0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s;
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(4,4,10,0.8); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.35s;
 }
-
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
-
 .modal {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 20px;
-  padding: 36px 34px 28px;
-  max-width: 440px;
-  width: 90%;
+  background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: 20px; padding: 36px 34px 28px;
+  max-width: 440px; width: 90%;
   transform: scale(0.92) translateY(20px);
   transition: transform 0.4s cubic-bezier(.4,0,.2,1);
   box-shadow: 0 24px 80px rgba(0,0,0,0.6);
 }
-
 .modal-overlay.active .modal { transform: scale(1) translateY(0); }
-
-.modal__title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-  margin-bottom: 8px;
-}
-
-.modal__text {
-  color: var(--text-sec);
-  font-size: 0.88rem;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
+.modal__title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
+.modal__text { color: var(--text-sec); font-size: 0.88rem; line-height: 1.6; margin-bottom: 20px; }
 .modal__episodes {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 22px;
-  max-height: 160px;
-  overflow-y: auto;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+  border-radius: 10px; padding: 12px 16px; margin-bottom: 22px;
+  max-height: 160px; overflow-y: auto;
 }
-
 .modal__ep-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 0;
-  font-size: 0.82rem;
-  color: var(--text-sec);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: 0.82rem; color: var(--text-sec);
   border-bottom: 1px solid var(--border-subtle);
 }
-
 .modal__ep-item:last-child { border-bottom: none; }
 .modal__ep-item span:first-child { color: var(--gold); font-weight: 600; font-family: 'Syne', sans-serif; }
-
-.modal__actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
+.modal__actions { display: flex; gap: 12px; justify-content: flex-end; }
 .modal__btn {
-  padding: 10px 22px;
-  border-radius: 10px;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: none;
+  padding: 10px 22px; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.85rem;
+  cursor: pointer; transition: all var(--transition); border: none;
 }
-
 .modal__btn--cancel {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-sec);
+  background: transparent; border: 1px solid var(--border-subtle); color: var(--text-sec);
 }
-
 .modal__btn--cancel:hover { border-color: var(--text-muted); color: var(--text); }
-
 .modal__btn--confirm {
-  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-  color: var(--bg-deep);
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim)); color: var(--bg-deep);
 }
-
 .modal__btn--confirm:hover { box-shadow: 0 0 20px var(--gold-glow); transform: translateY(-1px); }
-
 .modal__shutdown-warn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(201,74,74,0.08);
-  border: 1px solid rgba(201,74,74,0.2);
-  border-radius: 8px;
-  padding: 8px 14px;
-  margin-bottom: 18px;
-  font-size: 0.78rem;
-  color: var(--red);
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(201,74,74,0.08); border: 1px solid rgba(201,74,74,0.2);
+  border-radius: 8px; padding: 8px 14px; margin-bottom: 18px;
+  font-size: 0.78rem; color: var(--red);
 }
 
-/* ── KEYFRAMES ─────────────────── */
+/* ══════════════ ANIMATIONS ══════════════ */
+
 @keyframes fadeDown {
   from { opacity: 0; transform: translateY(-12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(16px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(100%); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes breathe {
   0%, 100% { box-shadow: 0 0 28px var(--gold-glow), 0 4px 18px rgba(0,0,0,0.3); }
   50% { box-shadow: 0 0 48px rgba(212,149,58,0.28), 0 4px 22px rgba(0,0,0,0.35); }
 }
 
-@keyframes checkPop {
-  0% { transform: scale(0); }
-  60% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
+/* ══════════════ RESPONSIVE ══════════════ */
 
-/* ── RESPONSIVE ────────────────── */
 @media (max-width: 700px) {
-  .header { padding: 32px 20px 20px; }
+  .lib-header { padding: 32px 20px 8px; }
+  .lib-grid-wrapper { padding: 16px 20px 40px; }
+  .lib-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
+  .show-header { padding: 16px 20px 0; }
+  .season-tabs { padding: 0 20px; }
+  .season-bar-wrap { padding: 0 20px; }
   .grid-wrapper { padding: 8px 20px 0; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
   .controls { padding: 14px 16px; }
@@ -769,68 +610,92 @@ body::after {
 </head>
 <body>
 
-<!-- NOW PLAYING BAR -->
+<!-- NP BAR (global) -->
 <div class="np-bar" id="npBar"><div class="np-bar__fill"></div></div>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="header__badge">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-    Saison <span id="seasonNum">1</span>
-  </div>
-  <div class="server-badge" id="serverBadge">
-    <span class="server-badge__dot"></span>
-    <span>Hors ligne</span>
-  </div>
-  <h1 class="header__title" id="showTitle">Abbott Elementary</h1>
-  <p class="header__sub"><span id="totalCount">—</span> episodes &middot; <span id="watchedCount">0</span><span> vus</span></p>
-  <div class="season-bar">
-    <div class="season-bar__fill" id="seasonFill" style="width: 0%"></div>
-  </div>
-</header>
-
-<!-- EPISODE GRID -->
-<section class="grid-wrapper">
-  <div class="grid" id="grid">
-    <div class="grid__spotlight" id="spotlight"></div>
-    <!-- Cards injected by JS -->
+<!-- ═══════════ LIBRARY VIEW ═══════════ -->
+<section id="libraryView">
+  <header class="lib-header">
+    <div class="lib-header__row">
+      <h1 class="lib-header__brand">OwnNetflix</h1>
+      <div class="server-badge" id="serverBadge">
+        <span class="server-badge__dot"></span>
+        <span>Hors ligne</span>
+      </div>
+    </div>
+    <p class="lib-header__sub" id="libSubtitle">Chargement...</p>
+  </header>
+  <div class="lib-grid-wrapper">
+    <div class="lib-grid" id="libGrid"></div>
   </div>
 </section>
 
-<!-- CONTROL BAR -->
-<div class="controls">
-  <div class="controls__inner">
-    <div class="ctrl-group">
-      <label for="startEp">Reprendre</label>
-      <input type="number" id="startEp" class="ctrl-input" min="1" value="1">
-    </div>
-    <div class="ctrl-group">
-      <label for="epCount">Episodes</label>
-      <input type="number" id="epCount" class="ctrl-input" min="1" value="3">
-    </div>
-    <div class="ctrl-group">
-      <label>Eteindre</label>
-      <label class="toggle">
-        <input type="checkbox" id="shutdownToggle">
-        <span class="toggle__track"></span>
-      </label>
-    </div>
-    <div class="np-info" id="npInfo">
-      <span class="np-info__dot"></span>
-      <span id="npText">En lecture...</span>
-    </div>
-    <button class="play-btn" id="playBtn" title="Lancer la lecture">
-      <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+<!-- ═══════════ SHOW DETAIL VIEW ═══════════ -->
+<section id="showView" style="display:none">
+  <header class="show-header">
+    <button class="back-btn" id="backBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Bibliotheque
     </button>
-    <button class="reset-btn" id="resetBtn">Reset</button>
+    <h1 class="show-header__title" id="showTitle"></h1>
+    <div class="show-header__meta">
+      <span class="show-header__info" id="seasonInfo"></span>
+      <div class="server-badge" id="serverBadge2">
+        <span class="server-badge__dot"></span>
+        <span>Hors ligne</span>
+      </div>
+    </div>
+    <p class="show-header__overview" id="showOverview"></p>
+  </header>
+
+  <div class="season-tabs" id="seasonTabs"></div>
+
+  <div class="season-bar-wrap">
+    <div class="season-bar">
+      <div class="season-bar__fill" id="seasonFill" style="width: 0%"></div>
+    </div>
   </div>
-</div>
+
+  <section class="grid-wrapper">
+    <div class="grid" id="grid">
+      <div class="grid__spotlight" id="spotlight"></div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <div class="controls__inner">
+      <div class="ctrl-group">
+        <label for="startEp">Reprendre</label>
+        <input type="number" id="startEp" class="ctrl-input" min="1" value="1">
+      </div>
+      <div class="ctrl-group">
+        <label for="epCount">Episodes</label>
+        <input type="number" id="epCount" class="ctrl-input" min="1" value="3">
+      </div>
+      <div class="ctrl-group">
+        <label>Eteindre</label>
+        <label class="toggle">
+          <input type="checkbox" id="shutdownToggle">
+          <span class="toggle__track"></span>
+        </label>
+      </div>
+      <div class="np-info" id="npInfo">
+        <span class="np-info__dot"></span>
+        <span id="npText">En lecture...</span>
+      </div>
+      <button class="play-btn" id="playBtn" title="Lancer la lecture">
+        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      </button>
+      <button class="reset-btn" id="resetBtn">Reset</button>
+    </div>
+  </div>
+</section>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h2 class="modal__title" id="modalTitle">Bonne seance !</h2>
-    <p class="modal__text" id="modalText">Ces episodes vont etre marques comme vus :</p>
+    <h2 class="modal__title" id="modalTitle">Lancer VLC</h2>
+    <p class="modal__text" id="modalText"></p>
     <div class="modal__shutdown-warn" id="shutdownWarn" style="display:none">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       Le PC s'eteindra apres la lecture
@@ -838,7 +703,7 @@ body::after {
     <div class="modal__episodes" id="modalEpisodes"></div>
     <div class="modal__actions">
       <button class="modal__btn modal__btn--cancel" id="modalCancel">Annuler</button>
-      <button class="modal__btn modal__btn--confirm" id="modalConfirm">Marquer comme vus</button>
+      <button class="modal__btn modal__btn--confirm" id="modalConfirm">Lancer</button>
     </div>
   </div>
 </div>
@@ -850,39 +715,55 @@ body::after {
 </div>
 
 <script>
+// ══════════════ STATE ══════════════
+
+const API_BASE = '';
+let library = [];
+let currentSlug = null;
+let currentSeason = null;
+let currentShow = null;
 let EPISODES = [];
-
-const STORAGE_KEY = 'abbott_s01_progress';
-const API_BASE = location.protocol === 'file:'
-  ? 'http://localhost:8899'
-  : '';
-
-// ── State ──
-let watched = loadWatched();
-let selectedStart = getNextUnwatched();
+let watched = new Set();
+let selectedStart = 1;
 let serverConnected = false;
 let nowPlayingEp = null;
 let pollTimer = null;
+let lastPollKey = '';
+
+// ══════════════ STORAGE ══════════════
+
+function storageKey() {
+  return `watched_${currentSlug}_S${String(currentSeason).padStart(2, '0')}`;
+}
 
 function loadWatched() {
+  if (!currentSlug) return new Set();
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey());
     return raw ? new Set(JSON.parse(raw)) : new Set();
   } catch { return new Set(); }
 }
 
 function saveWatched() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...watched]));
+  if (!currentSlug) return;
+  localStorage.setItem(storageKey(), JSON.stringify([...watched]));
 }
 
 function getNextUnwatched() {
   for (const ep of EPISODES) {
     if (!watched.has(ep.num)) return ep.num;
   }
-  return 1;
+  return EPISODES.length > 0 ? EPISODES[0].num : 1;
 }
 
-// ── DOM refs ──
+// ══════════════ DOM REFS ══════════════
+
+const libGrid = document.getElementById('libGrid');
+const libSubtitle = document.getElementById('libSubtitle');
+const serverBadge = document.getElementById('serverBadge');
+const serverBadge2 = document.getElementById('serverBadge2');
+const showView = document.getElementById('showView');
+const libraryView = document.getElementById('libraryView');
 const grid = document.getElementById('grid');
 const spotlight = document.getElementById('spotlight');
 const startInput = document.getElementById('startEp');
@@ -891,7 +772,7 @@ const shutdownToggle = document.getElementById('shutdownToggle');
 const playBtn = document.getElementById('playBtn');
 const resetBtn = document.getElementById('resetBtn');
 const seasonFill = document.getElementById('seasonFill');
-const watchedCountEl = document.getElementById('watchedCount');
+const seasonTabs = document.getElementById('seasonTabs');
 const modalOverlay = document.getElementById('modalOverlay');
 const modalEpisodes = document.getElementById('modalEpisodes');
 const modalCancel = document.getElementById('modalCancel');
@@ -901,182 +782,271 @@ const toast = document.getElementById('toast');
 const npBar = document.getElementById('npBar');
 const npInfo = document.getElementById('npInfo');
 const npText = document.getElementById('npText');
-const serverBadge = document.getElementById('serverBadge');
+const backBtn = document.getElementById('backBtn');
 
-// ── Server communication ──
-async function init() {
-  // 1. Fetch episodes from server
+// ══════════════ ROUTER ══════════════
+
+function navigate(hash) { location.hash = hash; }
+
+function handleRoute() {
+  const hash = location.hash || '#/';
+  if (hash === '#/' || hash === '#' || hash === '') {
+    showLibrary();
+  } else {
+    const m = hash.match(/#\/show\/([^/]+)\/?(\d+)?/);
+    if (m) {
+      showDetail(m[1], m[2] ? parseInt(m[2]) : null);
+    } else {
+      showLibrary();
+    }
+  }
+}
+
+window.addEventListener('hashchange', handleRoute);
+
+// ══════════════ SERVER BADGE ══════════════
+
+function updateBadges() {
+  [serverBadge, serverBadge2].forEach(b => {
+    b.className = 'server-badge' + (serverConnected ? ' connected' : '');
+    b.querySelector('span:last-child').textContent = serverConnected ? 'Connecte' : 'Hors ligne';
+  });
+}
+
+// ══════════════ LIBRARY ══════════════
+
+async function loadLibrary() {
   try {
-    const res = await fetch(`${API_BASE}/api/episodes`, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`${API_BASE}/api/library`, { signal: AbortSignal.timeout(10000) });
     if (res.ok) {
-      const data = await res.json();
+      library = await res.json();
       serverConnected = true;
-      EPISODES = data.episodes;
-      document.getElementById('showTitle').textContent = data.show;
-      document.getElementById('seasonNum').textContent = data.season;
-      localStorage.setItem('episodes_cache', JSON.stringify(data));
+      localStorage.setItem('library_cache', JSON.stringify(library));
     }
   } catch {
     serverConnected = false;
+    try {
+      const cached = localStorage.getItem('library_cache');
+      if (cached) library = JSON.parse(cached);
+    } catch {}
+  }
+  updateBadges();
+}
+
+function showLibrary() {
+  libraryView.style.display = '';
+  showView.style.display = 'none';
+  currentSlug = null;
+  currentSeason = null;
+  currentShow = null;
+  EPISODES = [];
+  document.title = 'OwnNetflix';
+  buildLibraryGrid();
+}
+
+function buildLibraryGrid() {
+  libGrid.innerHTML = '';
+
+  if (library.length === 0) {
+    libGrid.innerHTML = '<div class="lib-empty">Aucun contenu trouve.<br>Ajoutez des dossiers de series ou films.</div>';
+    libSubtitle.textContent = 'Aucun contenu';
+    return;
   }
 
-  // 2. Fallback to cache
-  if (EPISODES.length === 0) {
-    try {
-      const cached = JSON.parse(localStorage.getItem('episodes_cache'));
-      if (cached && cached.episodes) {
-        EPISODES = cached.episodes;
-        document.getElementById('showTitle').textContent = cached.show;
-        document.getElementById('seasonNum').textContent = cached.season;
+  const sc = library.filter(s => s.type === 'series').length;
+  const mc = library.filter(s => s.type === 'movie').length;
+  const parts = [];
+  if (sc) parts.push(`${sc} serie${sc > 1 ? 's' : ''}`);
+  if (mc) parts.push(`${mc} film${mc > 1 ? 's' : ''}`);
+  libSubtitle.textContent = parts.join(' · ');
+
+  library.forEach((show, i) => {
+    const card = document.createElement('div');
+    card.className = 'show-card';
+    card.style.animationDelay = `${0.04 * i + 0.15}s`;
+
+    // Calculate total progress from localStorage
+    let totalEps = 0, totalWatched = 0;
+    show.seasons.forEach(s => {
+      totalEps += s.episode_count;
+      const key = `watched_${show.slug}_S${String(s.num).padStart(2, '0')}`;
+      try {
+        const w = JSON.parse(localStorage.getItem(key) || '[]');
+        totalWatched += w.length;
+      } catch {}
+    });
+    const pct = totalEps > 0 ? (totalWatched / totalEps) * 100 : 0;
+
+    let typeText = '';
+    if (show.type === 'series') {
+      const n = show.seasons.length;
+      typeText = `${n} saison${n > 1 ? 's' : ''}`;
+    } else {
+      typeText = 'Film';
+    }
+
+    card.innerHTML = `
+      <img class="show-card__poster" src="${API_BASE}/api/poster/${show.slug}" alt="${show.name}" loading="lazy"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="show-card__no-poster" style="display:none">${show.name}</div>
+      <div class="show-card__overlay">
+        <div>
+          <span class="show-card__type">${typeText}</span>
+          <h3 class="show-card__name">${show.name}</h3>
+        </div>
+        <div class="show-card__progress">
+          <div class="show-card__progress-fill" style="width:${pct}%"></div>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      const firstSeason = show.seasons[0]?.num ?? 1;
+      navigate(`#/show/${show.slug}/${firstSeason}`);
+    });
+
+    libGrid.appendChild(card);
+  });
+}
+
+// ══════════════ SHOW DETAIL ══════════════
+
+async function showDetail(slug, seasonNum) {
+  libraryView.style.display = 'none';
+  showView.style.display = '';
+
+  currentSlug = slug;
+  currentShow = library.find(s => s.slug === slug);
+
+  if (!currentShow) {
+    await loadLibrary();
+    currentShow = library.find(s => s.slug === slug);
+    if (!currentShow) { navigate('#/'); return; }
+  }
+
+  if (seasonNum === null) {
+    seasonNum = currentShow.seasons[0]?.num ?? 1;
+  }
+  currentSeason = seasonNum;
+
+  document.getElementById('showTitle').textContent = currentShow.name;
+  document.getElementById('showOverview').textContent = currentShow.overview || '';
+  document.title = `${currentShow.name} — OwnNetflix`;
+
+  buildSeasonTabs();
+  await loadSeasonEpisodes(slug, seasonNum);
+}
+
+function buildSeasonTabs() {
+  seasonTabs.innerHTML = '';
+
+  if (!currentShow || currentShow.seasons.length <= 1 || currentShow.type === 'movie') {
+    seasonTabs.classList.remove('visible');
+    return;
+  }
+
+  seasonTabs.classList.add('visible');
+
+  currentShow.seasons.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'season-tab' + (s.num === currentSeason ? ' active' : '');
+    btn.textContent = `Saison ${s.num}`;
+    btn.addEventListener('click', () => {
+      if (s.num !== currentSeason) {
+        navigate(`#/show/${currentSlug}/${s.num}`);
       }
+    });
+    seasonTabs.appendChild(btn);
+  });
+}
+
+async function loadSeasonEpisodes(slug, seasonNum) {
+  currentSeason = seasonNum;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/show/${slug}/season/${seasonNum}/episodes`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const data = await res.json();
+      EPISODES = data.episodes;
+      serverConnected = true;
+
+      // Sync server progress
+      if (data.next_episode) {
+        for (let i = 1; i < data.next_episode; i++) watched.add(i);
+      }
+
+      localStorage.setItem(`episodes_${slug}_S${String(seasonNum).padStart(2, '0')}`, JSON.stringify(data));
+    }
+  } catch {
+    try {
+      const cached = JSON.parse(localStorage.getItem(`episodes_${slug}_S${String(seasonNum).padStart(2, '0')}`));
+      if (cached) EPISODES = cached.episodes;
     } catch {}
   }
 
   if (EPISODES.length === 0) return;
 
-  // 3. Update dynamic values
-  document.getElementById('totalCount').textContent = EPISODES.length;
+  watched = loadWatched();
+  selectedStart = getNextUnwatched();
+
+  startInput.value = selectedStart;
   startInput.max = EPISODES.length;
   countInput.max = EPISODES.length;
 
-  // 4. Init state
-  watched = loadWatched();
-  selectedStart = getNextUnwatched();
-  startInput.value = selectedStart;
+  const seasonLabel = currentShow?.type === 'movie'
+    ? `${EPISODES.length} fichier${EPISODES.length > 1 ? 's' : ''}`
+    : `Saison ${seasonNum} · ${EPISODES.length} episodes`;
+  document.getElementById('seasonInfo').innerHTML = `${seasonLabel} · <span>${watched.size}</span> vus`;
 
   buildGrid();
   renderGrid();
   updateProgress();
-  updateServerBadge();
+  updateBadges();
 
-  // 5. Sync with server if connected
+  // Check if already playing this show/season
   if (serverConnected) {
     try {
-      const progressRes = await fetch(`${API_BASE}/api/progress`);
-      if (progressRes.ok) {
-        const pd = await progressRes.json();
-        for (let i = 1; i < pd.next_episode; i++) watched.add(i);
-        saveWatched();
-        selectedStart = getNextUnwatched();
-        startInput.value = selectedStart;
-      }
       const statusRes = await fetch(`${API_BASE}/api/status`);
       if (statusRes.ok) {
         const st = await statusRes.json();
-        if (st.playing) {
+        if (st.playing && st.show_slug === slug && st.season === seasonNum) {
           st.completed.forEach(ep => watched.add(ep));
           saveWatched();
           nowPlayingEp = st.current_episode;
           startPolling();
+          renderGrid();
+          updateProgress();
         }
       }
-      renderGrid();
-      updateProgress();
     } catch {}
   }
 }
 
-function updateServerBadge() {
-  serverBadge.className = 'server-badge' + (serverConnected ? ' connected' : '');
-  serverBadge.querySelector('span:last-child').textContent = serverConnected ? 'Connecte' : 'Hors ligne';
-}
+// ══════════════ EPISODE GRID ══════════════
 
-async function serverPlay(start, count, shutdown) {
-  try {
-    const res = await fetch(`${API_BASE}/api/play`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ start, count, shutdown })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      showToast('VLC lance !', 'success');
-      startPolling();
-      return true;
-    }
-    showToast(data.error || 'Erreur', 'info');
-    return false;
-  } catch {
-    showToast('Impossible de contacter le serveur', 'info');
-    return false;
-  }
-}
-
-let lastPollKey = '';
-
-function startPolling() {
-  npBar.classList.add('active');
-  playBtn.classList.add('disabled');
-  lastPollKey = '';
-
-  pollTimer = setInterval(async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/status`);
-      const st = await res.json();
-
-      // State diffing: only update DOM if something changed
-      const pollKey = `${st.current_episode}|${st.completed.join(',')}|${st.playing}`;
-      if (pollKey === lastPollKey) return;
-      lastPollKey = pollKey;
-
-      // Update watched from server
-      st.completed.forEach(ep => watched.add(ep));
-      saveWatched();
-      nowPlayingEp = st.current_episode;
-
-      // Update now playing info text
-      if (st.current_episode) {
-        const ep = EPISODES.find(e => e.num === st.current_episode);
-        npInfo.classList.add('active');
-        npText.textContent = ep ? `${ep.code} — ${ep.title}` : `Episode ${st.current_episode}`;
-      }
-
-      renderGrid();
-      updateProgress();
-
-      if (!st.playing) {
-        stopPolling();
-        selectedStart = getNextUnwatched();
-        startInput.value = selectedStart;
-        renderGrid();
-        showToast('Lecture terminee !', 'success');
-      }
-    } catch {
-      stopPolling();
-    }
-  }, 2000);
-}
-
-function stopPolling() {
-  clearInterval(pollTimer);
-  pollTimer = null;
-  nowPlayingEp = null;
-  npBar.classList.remove('active');
-  npInfo.classList.remove('active');
-  playBtn.classList.remove('disabled');
-}
-
-// ── Build grid (once) ──
 function buildGrid() {
+  // Remove old cards (keep spotlight)
+  grid.querySelectorAll('.card').forEach(c => c.remove());
+
   EPISODES.forEach((ep, i) => {
     const card = document.createElement('div');
     card.id = `ep-${ep.num}`;
     card.className = 'card';
     card.style.animationDelay = `${0.04 * i + 0.2}s`;
 
-    // After intro animation: fix final state and disable animation
     card.addEventListener('animationend', () => {
       card.style.opacity = '1';
       card.style.transform = 'translateY(0) scale(1)';
       card.style.animation = 'none';
     }, { once: true });
 
-    const thumbBase = location.protocol === 'file:' ? 'http://localhost:8899' : '';
     card.innerHTML = `
       <div class="card__status"></div>
-      <img class="card__thumb" src="${thumbBase}/thumbs/${ep.code}.jpg" alt="${ep.title}" loading="lazy">
+      <img class="card__thumb" src="${API_BASE}/thumbs/${currentSlug}/${currentSeason}/${ep.code}.jpg"
+           alt="${ep.title || ep.code}" loading="lazy"
+           onerror="this.style.display='none'">
       <div class="card__code">${ep.code}</div>
-      <div class="card__title">${ep.title}</div>
+      <div class="card__title">${ep.title || ''}</div>
       <button class="card__watch-btn" title="Marquer comme vu">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -1085,7 +1055,6 @@ function buildGrid() {
       </button>
     `;
 
-    // Watch toggle button
     card.querySelector('.card__watch-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       if (pollTimer) return;
@@ -1117,21 +1086,6 @@ function buildGrid() {
   });
 }
 
-function toggleWatched(num) {
-  if (watched.has(num)) watched.delete(num);
-  else watched.add(num);
-  saveWatched();
-  if (serverConnected) {
-    const maxW = watched.size > 0 ? Math.max(...watched) : 0;
-    fetch(`${API_BASE}/api/progress`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ episode: maxW + 1 })
-    }).catch(() => {});
-  }
-}
-
-// ── Update grid (classes + icons only, no DOM rebuild) ──
 function renderGrid() {
   const start = parseInt(startInput.value) || 1;
   const count = parseInt(countInput.value) || 1;
@@ -1141,7 +1095,6 @@ function renderGrid() {
     const card = document.getElementById(`ep-${ep.num}`);
     if (!card) return;
 
-    // Update classes without touching animation
     card.classList.remove('watched', 'selected', 'in-range', 'now-playing');
 
     if (nowPlayingEp === ep.num) {
@@ -1154,7 +1107,6 @@ function renderGrid() {
       card.classList.add('in-range');
     }
 
-    // Update status icon
     const statusEl = card.querySelector('.card__status');
     let icon;
     if (nowPlayingEp === ep.num) {
@@ -1173,55 +1125,152 @@ function renderGrid() {
 function updateProgress() {
   const pct = EPISODES.length > 0 ? (watched.size / EPISODES.length) * 100 : 0;
   seasonFill.style.width = pct + '%';
-  watchedCountEl.textContent = watched.size;
+
+  const seasonLabel = currentShow?.type === 'movie'
+    ? `${EPISODES.length} fichier${EPISODES.length > 1 ? 's' : ''}`
+    : `Saison ${currentSeason} · ${EPISODES.length} episodes`;
+  document.getElementById('seasonInfo').innerHTML = `${seasonLabel} · <span>${watched.size}</span> vus`;
 }
 
-// ── Spotlight cursor effect ──
+function toggleWatched(num) {
+  if (watched.has(num)) watched.delete(num);
+  else watched.add(num);
+  saveWatched();
+  if (serverConnected && currentSlug) {
+    const maxW = watched.size > 0 ? Math.max(...watched) : 0;
+    fetch(`${API_BASE}/api/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ show: currentSlug, season: currentSeason, episode: maxW + 1 })
+    }).catch(() => {});
+  }
+}
+
+// ══════════════ SPOTLIGHT ══════════════
+
 grid.addEventListener('mousemove', (e) => {
   const rect = grid.getBoundingClientRect();
   spotlight.style.left = (e.clientX - rect.left) + 'px';
   spotlight.style.top = (e.clientY - rect.top) + 'px';
 });
 
-// ── Controls ──
+// ══════════════ CONTROLS ══════════════
+
 startInput.addEventListener('input', () => {
   let v = parseInt(startInput.value);
+  const max = EPISODES.length || 1;
   if (v < 1) v = 1;
-  if (v > 13) v = 13;
+  if (v > max) v = max;
   selectedStart = v;
   renderGrid();
 });
 
 countInput.addEventListener('input', renderGrid);
 
-// ── Play button ──
+backBtn.addEventListener('click', () => navigate('#/'));
+
+// ══════════════ PLAYBACK ══════════════
+
+async function serverPlay(start, count, shutdown) {
+  try {
+    const res = await fetch(`${API_BASE}/api/play`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ show: currentSlug, season: currentSeason, start, count, shutdown })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('VLC lance !', 'success');
+      startPolling();
+      return true;
+    }
+    showToast(data.error || 'Erreur', 'info');
+    return false;
+  } catch {
+    showToast('Impossible de contacter le serveur', 'info');
+    return false;
+  }
+}
+
+function startPolling() {
+  npBar.classList.add('active');
+  playBtn.classList.add('disabled');
+  lastPollKey = '';
+
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/status`);
+      const st = await res.json();
+
+      const pollKey = `${st.current_episode}|${st.completed.join(',')}|${st.playing}`;
+      if (pollKey === lastPollKey) return;
+      lastPollKey = pollKey;
+
+      // Update watched if same show/season
+      if (st.show_slug === currentSlug && st.season === currentSeason) {
+        st.completed.forEach(ep => watched.add(ep));
+        saveWatched();
+        nowPlayingEp = st.current_episode;
+
+        if (st.current_episode) {
+          const ep = EPISODES.find(e => e.num === st.current_episode);
+          npInfo.classList.add('active');
+          npText.textContent = ep ? `${ep.code} — ${ep.title}` : `Episode ${st.current_episode}`;
+        }
+
+        renderGrid();
+        updateProgress();
+      }
+
+      if (!st.playing) {
+        stopPolling();
+        if (st.show_slug === currentSlug || !st.show_slug) {
+          selectedStart = getNextUnwatched();
+          startInput.value = selectedStart;
+          renderGrid();
+        }
+        showToast('Lecture terminee !', 'success');
+      }
+    } catch {
+      stopPolling();
+    }
+  }, 2000);
+}
+
+function stopPolling() {
+  clearInterval(pollTimer);
+  pollTimer = null;
+  nowPlayingEp = null;
+  npBar.classList.remove('active');
+  npInfo.classList.remove('active');
+  playBtn.classList.remove('disabled');
+}
+
+// ══════════════ PLAY BUTTON ══════════════
+
 playBtn.addEventListener('click', () => {
-  if (pollTimer) return; // Already playing
+  if (pollTimer || EPISODES.length === 0) return;
 
   const start = parseInt(startInput.value) || 1;
   const count = parseInt(countInput.value) || 1;
   const shutdown = shutdownToggle.checked;
 
   const epsInRange = EPISODES.filter(ep => ep.num >= start && ep.num < start + count);
-  const epsUnwatched = epsInRange.filter(ep => !watched.has(ep.num));
-
   if (epsInRange.length === 0) {
     showToast('Aucun episode selectionne', 'info');
     return;
   }
 
-  // Build modal content
   shutdownWarn.style.display = shutdown ? 'flex' : 'none';
   modalEpisodes.innerHTML = '';
   epsInRange.forEach(ep => {
     const item = document.createElement('div');
     item.className = 'modal__ep-item';
     const tag = watched.has(ep.num) ? ' <span style="opacity:0.4">(deja vu)</span>' : '';
-    item.innerHTML = `<span>${ep.code}</span><span>${ep.title}${tag}</span>`;
+    item.innerHTML = `<span>${ep.code}</span><span>${ep.title || ''}${tag}</span>`;
     modalEpisodes.appendChild(item);
   });
 
-  // Adapt modal based on server connection
   const modalTitle = document.getElementById('modalTitle');
   const modalText = document.getElementById('modalText');
   if (serverConnected) {
@@ -1236,15 +1285,11 @@ playBtn.addEventListener('click', () => {
 
   modalOverlay.classList.add('active');
 
-  // Confirm handler
   modalConfirm.onclick = async () => {
     modalOverlay.classList.remove('active');
-
     if (serverConnected) {
-      // Launch VLC via server
       await serverPlay(start, count, shutdown);
     } else {
-      // Offline mode: just mark as watched
       epsInRange.forEach(ep => watched.add(ep.num));
       saveWatched();
       selectedStart = getNextUnwatched();
@@ -1261,19 +1306,20 @@ modalOverlay.addEventListener('click', (e) => {
   if (e.target === modalOverlay) modalOverlay.classList.remove('active');
 });
 
-// ── Reset ──
+// ══════════════ RESET ══════════════
+
 resetBtn.addEventListener('click', () => {
   if (pollTimer) return;
-  if (!confirm('Remettre toute la progression a zero ?')) return;
+  if (!confirm('Remettre la progression de cette saison a zero ?')) return;
   watched.clear();
   saveWatched();
   startInput.value = 1;
   selectedStart = 1;
-  if (serverConnected) {
+  if (serverConnected && currentSlug) {
     fetch(`${API_BASE}/api/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ episode: 1 })
+      body: JSON.stringify({ show: currentSlug, season: currentSeason, episode: 1 })
     }).catch(() => {});
   }
   renderGrid();
@@ -1281,7 +1327,8 @@ resetBtn.addEventListener('click', () => {
   showToast('Progression remise a zero', 'reset');
 });
 
-// ── Toast ──
+// ══════════════ TOAST ══════════════
+
 let toastTimer;
 function showToast(msg, type = 'info') {
   const iconMap = { success: '\u2728', info: '\u2139\uFE0F', reset: '\u21A9\uFE0F' };
@@ -1292,16 +1339,42 @@ function showToast(msg, type = 'info') {
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 3200);
 }
 
-// ── Keyboard shortcuts ──
+// ══════════════ KEYBOARD ══════════════
+
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
+
+  // Escape: close modal or go back
+  if (e.key === 'Escape') {
+    if (modalOverlay.classList.contains('active')) {
+      modalOverlay.classList.remove('active');
+    } else if (currentSlug) {
+      navigate('#/');
+    }
+    return;
+  }
+
+  // Only in show detail view
+  if (!currentSlug || EPISODES.length === 0) return;
+
   if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); playBtn.click(); }
-  if (e.key === 'ArrowRight') { startInput.value = Math.min(EPISODES.length || 1, (parseInt(startInput.value)||1) + 1); startInput.dispatchEvent(new Event('input')); }
-  if (e.key === 'ArrowLeft') { startInput.value = Math.max(1, (parseInt(startInput.value)||1) - 1); startInput.dispatchEvent(new Event('input')); }
-  if (e.key === 'Escape') modalOverlay.classList.remove('active');
+  if (e.key === 'ArrowRight') {
+    startInput.value = Math.min(EPISODES.length, (parseInt(startInput.value)||1) + 1);
+    startInput.dispatchEvent(new Event('input'));
+  }
+  if (e.key === 'ArrowLeft') {
+    startInput.value = Math.max(1, (parseInt(startInput.value)||1) - 1);
+    startInput.dispatchEvent(new Event('input'));
+  }
 });
 
-// ── Init ──
+// ══════════════ INIT ══════════════
+
+async function init() {
+  await loadLibrary();
+  handleRoute();
+}
+
 init();
 </script>
 
